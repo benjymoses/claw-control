@@ -1,0 +1,8 @@
+services:
+  the-project:
+    image: the-project
+    build: .
+    volumes:
+      - ./cert-exchange:/cert-exchange
+    stdin_open: true
+    tty: true

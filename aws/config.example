@@ -1,0 +1,5 @@
+[default]
+    credential_process = aws_signing_helper credential-process --certificate /cert-exchange/final-cert.pem --private-key /cert-exchange/private-key.pem  --trust-anchor-arn <here> --profile-arn <here> --role-arn <here>
+    region = eu-west-1
+    cli_binary_format = raw-in-base64-out
+    cli_pager =

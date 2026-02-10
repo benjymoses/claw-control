@@ -1,0 +1,6 @@
+.DS_Store
+.env
+cert-exchange/*.pem
+aws/
+!aws/config.example
+openclaw

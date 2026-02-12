@@ -1,6 +1,17 @@
 .DS_Store
+.kiro/
+
+# Environment (only .env.example is committed)
 .env
-cert-exchange/*.pem
-aws/
-!aws/config.example
-openclaw
+
+# Generated AWS config (only config.example is committed)
+deployment-wrapper/container-injects/config
+!deployment-wrapper/container-injects/config.example
+
+# Certificate artifacts
+deployment-wrapper/container-mounts/cert-exchange/*.pem
+deployment-wrapper/container-mounts/cert-exchange/*.srl
+deployment-wrapper/container-mounts/root-ca-private-key/*.pem
+
+# OpenClaw source (pulled fresh)
+openclaw/

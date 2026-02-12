@@ -1,0 +1,8 @@
+services:
+  root-ca:
+    build:
+      context: ../../
+      dockerfile: containers/root-ca/Dockerfile
+    volumes:
+      - ../../container-mounts/root-ca-private-key:/mnt/root-ca-private-key
+      - ../../container-mounts/cert-exchange:/mnt/cert-exchange

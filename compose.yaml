@@ -1,8 +1,72 @@
 services:
-  the-project:
-    image: the-project
-    build: .
+  tailscale:
+    image: tailscale/tailscale:latest
+    hostname: openclaw-gateway
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
     volumes:
-      - ./cert-exchange:/cert-exchange
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "tailscale", "status"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
+        sleep 2
+        tailscale up --authkey=${TS_AUTHKEY} --hostname=openclaw-gateway
+        sleep 2
+        tailscale serve --bg --yes 18789
+        wait
+
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    network_mode: "service:tailscale"
+    depends_on:
+      tailscale:
+        condition: service_healthy
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
+    init: true
+    restart: unless-stopped
+    command:
+      ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    network_mode: "service:tailscale"
+    depends_on:
+      tailscale:
+        condition: service_healthy
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN}
+      BROWSER: echo
+    volumes:
+      - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
+      - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
     stdin_open: true
     tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+
+volumes:
+  tailscale-state:

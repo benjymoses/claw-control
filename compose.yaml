@@ -43,6 +43,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GOG_KEYRING_PASSWORD: ${GOG_KEYRING_PASSWORD}
       GOG_ACCOUNT: ${GOG_ACCOUNT}
+      GITHUB_PAT: ${GITHUB_PAT}
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace

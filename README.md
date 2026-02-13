@@ -18,8 +18,6 @@ claw-control builds a customized OpenClaw Docker image by:
 
 You always get the latest official OpenClaw build with no fork to maintain. The build system simply layers the infrastructure you need on top.
 
-> **📝 Note:** The CLI script currently uses macOS-specific `sed -i ''` syntax. Linux users may need to adjust this — a cross-platform fix is on the to-do list.
-
 ## 📋 Prerequisites
 
 - 🐳 [Docker](https://docs.docker.com/get-docker/) or [Finch](https://github.com/runfinch/finch) (the script auto-detects which is available)
@@ -49,7 +47,7 @@ If you just want OpenClaw with Homebrew and Tailscale:
 
 1. Run `./claw-control.sh` and select option 1 (Build from Latest)
    - On first run, this generates `.env` from `.env.example` (if you're an existing OpenClaw user you can paste in the values from your old .env file here afterwards)
-   - The script will automatically detect if you havne't generated certificates for AWS auth and build without AWS components
+   - The script will automatically detect if you haven't generated certificates for AWS auth and build without AWS components
 2. Add your Tailscale auth key to `.env`:
    ```bash
    # Option 1: Edit .env directly and add your key
@@ -121,6 +119,38 @@ The deployment uses a Tailscale sidecar container that provides secure networkin
 - No port forwarding or firewall configuration needed
 
 Just add your `TS_AUTHKEY` to `.env` and you're ready to go.
+
+### 🍺 Homebrew & Skill Persistence
+
+OpenClaw skills often require system dependencies installed via Homebrew. claw-control persists Homebrew packages and skill configurations across container restarts by mounting host directories:
+
+**What persists:**
+- `~/.openclaw-brew/cellar/` — Installed Homebrew packages
+- `~/.openclaw-brew/opt/` — Package symlinks
+- `~/.openclaw-brew/var/` — Package metadata
+- `~/.openclaw-brew/taps/` — Formula repositories
+- `~/.openclaw-brew/config/` — Skill configurations (like `~/.config/gogcli`)
+
+**Setup:**
+Create the persistence directories before first run:
+```bash
+mkdir -p ~/.openclaw-brew/{cellar,opt,var,taps,config}
+```
+
+**How it works:**
+- Install skills normally: `docker compose run --rm openclaw-cli skills install <skill-name>`
+- On container restart, the entrypoint automatically reinstalls packages to recreate symlinks
+- Skill configurations and credentials persist in `~/.openclaw-brew/config/`
+
+**Skill-specific environment variables:**
+Some skills require API keys or credentials. Add these to your `.env` file:
+```bash
+# Example: GOG skill
+GOG_KEYRING_PASSWORD=your-password
+GOG_ACCOUNT=your-email@example.com
+```
+
+The `OPENCLAW_BREW_DIR` variable in `.env` controls where these directories are stored (defaults to `~/.openclaw-brew`).
 
 ### ☁️ AWS IAM Roles Anywhere (Optional)
 

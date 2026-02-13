@@ -1,6 +1,26 @@
 #!/bin/bash
 set -euo pipefail
 
+# ─── OS Detection ──────────────────────────────────────────────────────────────
+
+# Detect OS for sed compatibility
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  SED_INPLACE="sed -i ''"
+else
+  SED_INPLACE="sed -i"
+fi
+
+# Cross-platform sed in-place replacement
+sed_replace() {
+  local pattern="$1"
+  local file="$2"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "$pattern" "$file"
+  else
+    sed -i "$pattern" "$file"
+  fi
+}
+
 # ─── Container CLI Detection ───────────────────────────────────────────────────
 
 CONTAINER_CLI=""
@@ -58,7 +78,7 @@ prompt_arn_value() {
   read -rp "  Enter $var_name: " new_val
   if [ -n "$new_val" ]; then
     # Use | as sed delimiter since ARNs contain colons and slashes
-    sed -i '' "s|^${var_name}=.*|${var_name}=${new_val}|" "$ENV_FILE"
+    sed_replace "s|^${var_name}=.*|${var_name}=${new_val}|" "$ENV_FILE"
   fi
 }
 
@@ -391,7 +411,7 @@ _aws_setup_automatic() {
     local trust_anchor_arn
     trust_anchor_arn=$(echo "$result" | jq -r '.trustAnchor.trustAnchorArn')
     echo "  Trust Anchor ARN: $trust_anchor_arn"
-    sed -i '' "s|^TRUST_ANCHOR_ARN=.*|TRUST_ANCHOR_ARN=${trust_anchor_arn}|" "$ENV_FILE"
+    sed_replace "s|^TRUST_ANCHOR_ARN=.*|TRUST_ANCHOR_ARN=${trust_anchor_arn}|" "$ENV_FILE"
 
     # Enable the trust anchor
     echo "  Enabling trust anchor..."
@@ -444,7 +464,7 @@ EOF
     local role_arn
     role_arn=$(echo "$result" | jq -r '.Role.Arn')
     echo "  Role ARN: $role_arn"
-    sed -i '' "s|^ROLE_ARN=.*|ROLE_ARN=${role_arn}|" "$ENV_FILE"
+    sed_replace "s|^ROLE_ARN=.*|ROLE_ARN=${role_arn}|" "$ENV_FILE"
   else
     error_msg "Failed to create IAM role."
     echo "Command was:"
@@ -464,7 +484,7 @@ EOF
     local profile_arn
     profile_arn=$(echo "$result" | jq -r '.profile.profileArn')
     echo "  Profile ARN: $profile_arn"
-    sed -i '' "s|^PROFILE_ARN=.*|PROFILE_ARN=${profile_arn}|" "$ENV_FILE"
+    sed_replace "s|^PROFILE_ARN=.*|PROFILE_ARN=${profile_arn}|" "$ENV_FILE"
 
     # Enable the profile
     echo "  Enabling profile..."

@@ -122,21 +122,37 @@ Just add your `TS_AUTHKEY` to `.env` and you're ready to go.
 
 ### 🍺 Homebrew & Skill Persistence
 
-OpenClaw skills often require system dependencies installed via Homebrew. claw-control automatically tracks installed packages and reinstalls them on container restart.
+OpenClaw skills often require system dependencies installed via Homebrew. claw-control uses a hybrid approach for package management:
+
+**Build-time pre-installation:**
+- Heavy/slow packages (like `poppler`) are pre-installed during image build
+- Defined in `deployment-wrapper/container-injects/brew-packages-preinstall.txt`
+- Baked into the image for fast container startup
+- Requires image rebuild to add/remove packages
+
+**Runtime dynamic installation:**
+- When you run `brew install <package>`, it's automatically added to `~/.openclaw/homebrew/packages.txt`
+- On container start, packages in the list are installed (skipping any already pre-installed)
+- Perfect for lightweight packages that install quickly
+- No rebuild needed - just restart the container
 
 **How it works:**
-- When you run `brew install <package>`, it's automatically added to `~/.openclaw/homebrew/packages.txt`
-- On container start, all packages in the list are automatically installed
+- Pre-installed packages are available immediately on container start
+- Dynamic packages are tracked automatically and reinstalled on restart
 - Skill configurations persist in `~/.openclaw/` (mounted from host)
 - No manual tracking needed - just use `brew install` normally!
 
 **Installing packages:**
 ```bash
 # Just use brew normally - tracking is automatic
-docker compose exec openclaw-gateway brew install poppler
+docker compose exec openclaw-gateway brew install gogcli
 
 # Or install multiple packages at once
-docker compose exec openclaw-gateway brew install poppler imagemagick
+docker compose exec openclaw-gateway brew install gogcli imagemagick
+
+# Heavy packages? Add them to brew-packages-preinstall.txt and rebuild
+echo "poppler" >> deployment-wrapper/container-injects/brew-packages-preinstall.txt
+./claw-control.sh  # Select option 1 to rebuild
 ```
 
 **Skill-specific environment variables:**

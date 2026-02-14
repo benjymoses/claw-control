@@ -28,8 +28,14 @@ if [ -f "$BREW_PACKAGES_FILE" ]; then
   while IFS= read -r package; do
     # Skip empty lines and comments
     [[ -z "$package" || "$package" =~ ^# ]] && continue
-    echo "  Installing $package..."
-    brew install "$package" 2>/dev/null || echo "    (already installed or failed)"
+    
+    # Check if package is already installed (skip pre-installed packages)
+    if brew list "$package" &>/dev/null; then
+      echo "  $package (already installed, skipping)"
+    else
+      echo "  Installing $package..."
+      brew install "$package" 2>/dev/null || echo "    (failed to install)"
+    fi
   done < "$BREW_PACKAGES_FILE"
   echo "Homebrew packages installed."
 fi

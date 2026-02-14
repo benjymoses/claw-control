@@ -1,0 +1,7 @@
+# Homebrew packages to pre-install at container build time
+# These are typically heavy/slow packages that benefit from being baked into the image
+# Add one package per line, comments starting with # are ignored
+# Reference ~/.openclaw/homebrew/packages.txt for any you may want to add here
+
+poppler
+gogcli

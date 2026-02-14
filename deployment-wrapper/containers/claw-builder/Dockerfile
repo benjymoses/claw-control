@@ -75,6 +75,15 @@ RUN if [ "$BUILD_WITH_AWS" = "true" ]; then \
     # Clean up temp file regardless of AWS mode
     rm -f /tmp/aws-config
 
+# ─── Homebrew Pre-install Packages ─────────────────────────────────────────────
+COPY container-injects/brew-packages-preinstall.txt /tmp/brew-packages-preinstall.txt
+RUN while IFS= read -r package; do \
+      [[ -z "$package" || "$package" =~ ^# ]] && continue; \
+      echo "Pre-installing Homebrew package: $package..."; \
+      su - linuxbrew -c "brew install $package" || echo "Failed to install $package"; \
+    done < /tmp/brew-packages-preinstall.txt && \
+    rm /tmp/brew-packages-preinstall.txt
+
 # ─── Entrypoint & Homebrew wrapper ─────────────────────────────────────────────
 COPY container-injects/entrypoint.sh /entrypoint.sh
 COPY container-injects/brew-wrapper.sh /home/node/.brew-wrapper.sh

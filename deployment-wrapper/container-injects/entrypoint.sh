@@ -19,18 +19,19 @@ if command -v aws &>/dev/null; then
   fi
 fi
 
-# Relink Homebrew packages from persisted Cellar
-# This recreates symlinks in bin/ for packages that were installed previously
-if [ -d "/home/linuxbrew/.linuxbrew/Cellar" ]; then
-  echo "Relinking Homebrew packages..."
-  for formula in /home/linuxbrew/.linuxbrew/Cellar/*; do
-    if [ -d "$formula" ]; then
-      formula_name=$(basename "$formula")
-      echo "  Reinstalling $formula_name..."
-      brew reinstall "$formula_name" 2>/dev/null || true
-    fi
-  done
-  echo "Homebrew packages relinked."
+# Homebrew package persistence via package list
+BREW_PACKAGES_FILE="/home/node/.openclaw/homebrew/packages.txt"
+
+# Install packages from the persisted list
+if [ -f "$BREW_PACKAGES_FILE" ]; then
+  echo "Installing Homebrew packages from saved list..."
+  while IFS= read -r package; do
+    # Skip empty lines and comments
+    [[ -z "$package" || "$package" =~ ^# ]] && continue
+    echo "  Installing $package..."
+    brew install "$package" 2>/dev/null || echo "    (already installed or failed)"
+  done < "$BREW_PACKAGES_FILE"
+  echo "Homebrew packages installed."
 fi
 
 exec "$@"

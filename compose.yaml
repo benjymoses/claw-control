@@ -47,11 +47,7 @@ services:
     volumes:
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace
-      - ${OPENCLAW_BREW_DIR:-~/.openclaw-brew}/cellar:/home/linuxbrew/.linuxbrew/Cellar
-      - ${OPENCLAW_BREW_DIR:-~/.openclaw-brew}/opt:/home/linuxbrew/.linuxbrew/opt
-      - ${OPENCLAW_BREW_DIR:-~/.openclaw-brew}/var:/home/linuxbrew/.linuxbrew/var
-      - ${OPENCLAW_BREW_DIR:-~/.openclaw-brew}/taps:/home/linuxbrew/.linuxbrew/Library/Taps
-      - ${OPENCLAW_BREW_DIR:-~/.openclaw-brew}/config:/home/node/.config
+      - ${BREW_CONFIG_DIR}:/home/node/.config
     init: true
     restart: unless-stopped
     command:

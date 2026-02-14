@@ -122,25 +122,22 @@ Just add your `TS_AUTHKEY` to `.env` and you're ready to go.
 
 ### 🍺 Homebrew & Skill Persistence
 
-OpenClaw skills often require system dependencies installed via Homebrew. claw-control persists Homebrew packages and skill configurations across container restarts by mounting host directories:
-
-**What persists:**
-- `~/.openclaw-brew/cellar/` — Installed Homebrew packages
-- `~/.openclaw-brew/opt/` — Package symlinks
-- `~/.openclaw-brew/var/` — Package metadata
-- `~/.openclaw-brew/taps/` — Formula repositories
-- `~/.openclaw-brew/config/` — Skill configurations (like `~/.config/gogcli`)
-
-**Setup:**
-Create the persistence directories before first run:
-```bash
-mkdir -p ~/.openclaw-brew/{cellar,opt,var,taps,config}
-```
+OpenClaw skills often require system dependencies installed via Homebrew. claw-control automatically tracks installed packages and reinstalls them on container restart.
 
 **How it works:**
-- Install skills normally: `docker compose run --rm openclaw-cli skills install <skill-name>`
-- On container restart, the entrypoint automatically reinstalls packages to recreate symlinks
-- Skill configurations and credentials persist in `~/.openclaw-brew/config/`
+- When you run `brew install <package>`, it's automatically added to `~/.openclaw/homebrew/packages.txt`
+- On container start, all packages in the list are automatically installed
+- Skill configurations persist in `~/.openclaw/` (mounted from host)
+- No manual tracking needed - just use `brew install` normally!
+
+**Installing packages:**
+```bash
+# Just use brew normally - tracking is automatic
+docker compose exec openclaw-gateway brew install poppler
+
+# Or install multiple packages at once
+docker compose exec openclaw-gateway brew install poppler imagemagick
+```
 
 **Skill-specific environment variables:**
 Some skills require API keys or credentials. Add these to your `.env` file:
@@ -149,8 +146,6 @@ Some skills require API keys or credentials. Add these to your `.env` file:
 GOG_KEYRING_PASSWORD=your-password
 GOG_ACCOUNT=your-email@example.com
 ```
-
-The `OPENCLAW_BREW_DIR` variable in `.env` controls where these directories are stored (defaults to `~/.openclaw-brew`).
 
 ### ☁️ AWS IAM Roles Anywhere (Optional)
 

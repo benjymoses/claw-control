@@ -75,9 +75,14 @@ RUN if [ "$BUILD_WITH_AWS" = "true" ]; then \
     # Clean up temp file regardless of AWS mode
     rm -f /tmp/aws-config
 
-# ─── Entrypoint ─────────────────────────────────────────────────────────────────
+# ─── Entrypoint & Homebrew wrapper ─────────────────────────────────────────────
 COPY container-injects/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY container-injects/brew-wrapper.sh /home/node/.brew-wrapper.sh
+RUN chmod +x /entrypoint.sh && \
+    chown node:node /home/node/.brew-wrapper.sh && \
+    echo '' >> /home/node/.bashrc && \
+    echo '# Source Homebrew package tracking' >> /home/node/.bashrc && \
+    echo 'source ~/.brew-wrapper.sh' >> /home/node/.bashrc
 
 # ─── Security: non-root user ────────────────────────────────────────────────────
 USER node
